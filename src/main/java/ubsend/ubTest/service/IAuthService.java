@@ -6,4 +6,5 @@ public interface IAuthService {
 
 	String getTokenFromUB(AuthRequest request);
 	String getBearerToken();
+	String getClientID();
 }

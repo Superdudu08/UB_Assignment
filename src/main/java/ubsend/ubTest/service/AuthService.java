@@ -5,6 +5,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import ubsend.ubTest.entities.AuthRequest;
@@ -14,10 +15,15 @@ import ubsend.ubTest.entities.LoginResult;
 public class AuthService implements IAuthService{
 	
 	private String bearerToken;
+	private String clientID;
 	private static String URL_LOGIN = "https://staging-api.ubsend.io/v1/auth/login";
 	
 	@Override
 	public String getTokenFromUB(AuthRequest authRequest) {
+		if(!StringUtils.isEmpty(this.bearerToken)) {
+			return this.bearerToken;
+		}
+		
 		RestTemplate restTemplate = new RestTemplate();
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("ClientID", authRequest.getClientID());
@@ -31,11 +37,17 @@ public class AuthService implements IAuthService{
 		
 		LoginResult result = restTemplate.postForObject(URL_LOGIN, request, LoginResult.class);
 		this.bearerToken = result.getAccessToken();
-		return this.bearerToken;
+		this.clientID = authRequest.getClientID();
+		return this.getBearerToken();
 	}
 	
 	@Override
 	public String getBearerToken() {
 		return this.bearerToken;
+	}
+	
+	@Override
+	public String getClientID() {
+		return this.clientID;
 	}
 }
