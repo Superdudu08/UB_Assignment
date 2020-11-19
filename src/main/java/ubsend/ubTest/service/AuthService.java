@@ -20,25 +20,30 @@ public class AuthService implements IAuthService{
 	
 	@Override
 	public String getTokenFromUB(AuthRequest authRequest) {
-		if(!StringUtils.isEmpty(this.bearerToken)) {
-			return this.bearerToken;
-		}
-		
 		RestTemplate restTemplate = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("ClientID", authRequest.getClientID());
-		headers.setContentType(MediaType.APPLICATION_JSON);
+
+		HttpHeaders headers = this.createHttpHeaders(authRequest);
+		JSONObject userCredentials = this.createJSONCredentials(authRequest);		
 		
-		JSONObject userCredentials = new JSONObject();
-		userCredentials.put("username", authRequest.getUsername());
-		userCredentials.put("password", authRequest.getPassword());		
-		
-		HttpEntity<String> request = new HttpEntity<String>(userCredentials.toString(),headers);
-		
+		HttpEntity<String> request = new HttpEntity<String>(userCredentials.toString(),headers);		
 		LoginResult result = restTemplate.postForObject(URL_LOGIN, request, LoginResult.class);
 		this.bearerToken = result.getAccessToken();
 		this.clientID = authRequest.getClientID();
 		return this.getBearerToken();
+	}
+	
+	public JSONObject createJSONCredentials(AuthRequest authRequest) {
+		JSONObject userCredentials = new JSONObject();
+		userCredentials.put("username", authRequest.getUsername());
+		userCredentials.put("password", authRequest.getPassword());	
+		return userCredentials;
+	}
+	
+	public HttpHeaders createHttpHeaders(AuthRequest authRequest) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("ClientID", authRequest.getClientID());
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		return headers;
 	}
 	
 	@Override

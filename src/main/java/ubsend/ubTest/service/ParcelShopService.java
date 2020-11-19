@@ -30,23 +30,32 @@ public class ParcelShopService implements IParcelShopService{
 	@Override
 	public List<ParcelShop> getParcelShopsFromUB(String carrier, String country, int limit) {
 		RestTemplate restTemplate = new RestTemplate();
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("ClientID", this.authService.getClientID());
-		headers.add("Authorization", "Bearer " + this.authService.getBearerToken());
-		headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
 		
-		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(URL_PARCEL)
-		        .queryParam("carrier", carrier)
-		        .queryParam("country", country)
-		        .queryParam("limit", limit);
+		HttpHeaders headers = this.createHttpHeaders();
 		HttpEntity<?> entity = new HttpEntity<>(headers);
 		
-		ResponseEntity<ParcelShop[]> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET, entity, ParcelShop[].class);
+		ResponseEntity<ParcelShop[]> response = restTemplate.exchange(this.createURL(carrier, country, limit), HttpMethod.GET, entity, ParcelShop[].class);
 		
 		for(ParcelShop p : response.getBody()) {
 			this.repository.save(p);
 		}
 		return this.getParcelShopsFromDatabase();
+	}
+	
+	public String createURL(String carrier, String country, int limit) {
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(URL_PARCEL)
+		        .queryParam("carrier", carrier)
+		        .queryParam("country", country)
+		        .queryParam("limit", limit);
+		return builder.toUriString();
+	}
+	
+	public HttpHeaders createHttpHeaders() {
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("ClientID", this.authService.getClientID());
+		headers.add("Authorization", "Bearer " + this.authService.getBearerToken());
+		headers.set("Accept", MediaType.APPLICATION_JSON_VALUE);
+		return headers;
 	}
 
 	@Override
